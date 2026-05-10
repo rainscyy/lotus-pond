@@ -57,31 +57,17 @@
     image-rendering: -webkit-optimize-contrast;
   }
   .grain {
-    background-size: 150px 150px;
-    opacity: 1;
+    background-size: 160px 160px;
+    opacity: 0.85;
     mix-blend-mode: multiply;
-    animation: grainDrift 12s steps(6) infinite;
-    filter: contrast(1.15);
+    animation: grainDrift 6s steps(8) infinite;
   }
   .grain::after {
     content: '';
-    background-size: 300px 300px;
-    opacity: 0.7;
+    background-size: 320px 320px;
+    opacity: 0.45;
     mix-blend-mode: overlay;
-    animation: grainDrift 18s steps(5) infinite reverse;
-  }
-  /* extra texture layer — soft-light only modulates lightness, leaves
-     hue + saturation alone, so adds grain feel without altering colors */
-  .grain-extra {
-    position: fixed; inset: 0;
-    z-index: 3;
-    pointer-events: none;
-    background-image: url('./img/noise.png');
-    background-repeat: repeat;
-    background-size: 110px 110px;
-    opacity: 0.32;
-    mix-blend-mode: soft-light;
-    animation: grainDrift 14s steps(6) infinite;
+    animation: grainDrift 11s steps(6) infinite reverse;
   }
   /* top grain — sits ABOVE text & corner labels so the entire page,
      including UI, gets unified film-grain coverage (Sancho-style) */
@@ -91,19 +77,17 @@
     pointer-events: none;
     background-image: url('./img/noise.png');
     background-repeat: repeat;
-    background-size: 200px 200px;
-    opacity: 0.55;
+    background-size: 220px 220px;
+    opacity: 0.32;
     mix-blend-mode: multiply;
-    animation: grainDrift 16s steps(6) infinite reverse;
-    filter: contrast(1.12);
+    animation: grainDrift 8s steps(7) infinite reverse;
   }
-  /* drift offsets are smaller now — less visible flicker each step */
   @keyframes grainDrift {
     0%   { background-position:   0px   0px; }
-    20%  { background-position: -18px   8px; }
-    40%  { background-position:  11px -22px; }
-    60%  { background-position: -28px -12px; }
-    80%  { background-position:  22px  17px; }
+    20%  { background-position: -41px  17px; }
+    40%  { background-position:  23px -53px; }
+    60%  { background-position: -73px -29px; }
+    80%  { background-position:  61px  47px; }
     100% { background-position:   0px   0px; }
   }
 
@@ -1022,12 +1006,6 @@
     /* gallery: shrink the prev/next buttons to be reachable with thumbs */
     .gallery-nav { width: 44px; height: 44px; font-size: 22px; }
 
-    /* gallery cards: smaller heights so cards fit phone viewports */
-    .gallery-track { gap: 5vw; padding: 0 12vw; }
-    .gallery-card        { height: 50vh; }
-    .gallery-card.tall   { height: 60vh; }
-    .gallery-card.short  { height: 40vh; }
-
     /* gallery note + foot: smaller on mobile so they don't steal the cards' space */
     .gallery-note { max-width: 80vw; font-size: 10.5px; }
     .gallery-foot { font-size: 9.5px; letter-spacing: 0.32em; }
@@ -1062,7 +1040,6 @@
 <canvas id="blobs"></canvas>
 
 <div class="grain"></div>
-<div class="grain-extra" aria-hidden="true"></div>
 
 <main>
   <section class="hero">
@@ -1176,7 +1153,7 @@
       <path id="circlePath" d="M 60,60 m -45,0 a 45,45 0 1,1 90,0 a 45,45 0 1,1 -90,0" />
     </defs>
     <text fill="currentColor" font-family="Cormorant Garamond, serif" font-size="9" letter-spacing="3" text-transform="uppercase">
-      <textPath href="#circlePath" startOffset="0">SOUND&#160;ON&#160;·&#160;SOUND&#160;ON&#160;·&#160;RAINING&#160;·&#160;SOUND&#160;ON&#160;·&#160;</textPath>
+      <textPath href="#circlePath" startOffset="0">RAINING&#160;&#160;·&#160;&#160;LOTUS&#160;POND&#160;&#160;·&#160;&#160;</textPath>
     </text>
   </svg>
   <span class="dot"></span>
@@ -1295,9 +1272,6 @@ class Blob {
     this.windSpeed  = 0.85 + Math.random() * 0.5;     // 0.85–1.35×
     this.windDrift  = (Math.random() - 0.5) * 80;      // ±40 px vertical
     this.windRotate = (Math.random() - 0.5) * 0.0025;  // gentle spin during flight
-    // mouse parallax depth — different per blob so the field has layered motion
-    this.parallaxX  = 12 + Math.random() * 28;         // 12–40 px range
-    this.parallaxY  = 8  + Math.random() * 18;         //  8–26 px range
   }
 
   update(dt) { this.angle += this.angularVel * dt; }
@@ -1324,12 +1298,8 @@ class Blob {
     const [cr, cg, cb] = this.color;
     const N = this.petalCount;
 
-    // smooth mouse parallax: blobs subtly drift opposite to cursor
-    const px = mouseSmoothX * this.parallaxX;
-    const py = mouseSmoothY * this.parallaxY;
-
     ctx.save();
-    ctx.translate(this.x + dx + px, this.y + dy + py);
+    ctx.translate(this.x + dx, this.y + dy);
     ctx.rotate(this.angle + extraSpin);
 
     // petals: N narrow soft-gradient ellipses radiating outward.
@@ -1378,15 +1348,6 @@ function spawnBlob(x, y) {
   if (blobs.length > MAX_BLOBS) blobs.shift();
 }
 
-/* mouse parallax state — blobs subtly drift in response to cursor */
-let mouseTargetX = 0, mouseTargetY = 0;   // -1 to 1, normalized
-let mouseSmoothX = 0, mouseSmoothY = 0;   // eased toward target each frame
-window.addEventListener('pointermove', (e) => {
-  if (document.body.classList.contains('in-study')) return;
-  mouseTargetX = (e.clientX / window.innerWidth  - 0.5) * 2;
-  mouseTargetY = (e.clientY / window.innerHeight - 0.5) * 2;
-}, { passive: true });
-
 /* wind-blow state — when active, every blob rendered with rightward
    sweep + fade. After the duration, the array is cleared. */
 const WIND_DURATION = 1800;
@@ -1418,8 +1379,8 @@ let pianoWave = null;     // (legacy — kept around in case we revert)
 let audioReady = false;
 let muted = false;
 
-const BG_TARGET = 0.18;   // background music — bumped up for clearer presence
-const MASTER_LEVEL = 0.95;
+const BG_TARGET = 0.11;   // background music — kept well below click volume
+const MASTER_LEVEL = 0.85;
 
 function setStatus(msg, fade = false) {
   const el = document.getElementById('audioStatus');
@@ -1449,7 +1410,7 @@ async function setupAudio() {
   bgGain.connect(masterGain);
 
   clickGain = audioCtx.createGain();
-  clickGain.gain.value = 0.65;
+  clickGain.gain.value = 0.45;
   clickGain.connect(masterGain);
 
   // build a piano-like custom waveform once (used by every click note).
@@ -1468,9 +1429,10 @@ async function setupAudio() {
   // so clicks are literally moments from the music — never disjointed.
   setStatus('· loading bgm');
   try {
-    const arr = await _bgmPromise;
-    if (!arr) throw new Error('bgm prefetch failed');
-    bgmBuffer = await audioCtx.decodeAudioData(arr.slice(0));
+    const resp = await fetch('./audio/bgm.mp3');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const arr = await resp.arrayBuffer();
+    bgmBuffer = await audioCtx.decodeAudioData(arr);
 
     bgSource = audioCtx.createBufferSource();
     bgSource.buffer = bgmBuffer;
@@ -1490,10 +1452,11 @@ async function setupAudio() {
     console.warn('bgm load failed (likely file:// — needs local server):', err);
   }
 
-  // decode the prefetched 水滴.mp3 once audioCtx exists; fire-and-forget
-  _dropPromise
-    .then(arr => arr ? audioCtx.decodeAudioData(arr.slice(0)) : null)
-    .then(buf => { if (buf) dropBuffer = buf; })
+  // load 水滴.mp3 for click sounds — fire-and-forget, slices played on tap
+  fetch('./audio/' + encodeURIComponent('水滴') + '.mp3')
+    .then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error('HTTP ' + r.status)))
+    .then(arr => audioCtx.decodeAudioData(arr))
+    .then(buf => { dropBuffer = buf; })
     .catch(err => console.warn('water drop sample failed:', err));
 }
 
@@ -1674,8 +1637,8 @@ toggle.addEventListener('click', () => {
   }
   const tp = toggle.querySelector('textPath');
   tp.textContent = muted
-    ? 'SOUND OFF · SOUND OFF · RAIN STOP · SOUND OFF · '
-    : 'SOUND ON · SOUND ON · RAINING · SOUND ON · ';
+    ? 'SOUND OFF  ·  LOTUS POND  ·  '
+    : 'SOUND ON  ·  LOTUS POND  ·  ';
 });
 
 // (the old reset button is gone — wind clear is now triggered by swipe-right)
@@ -1830,10 +1793,6 @@ let lastFrame = performance.now();
 function loop(now) {
   const dt = Math.min(50, now - lastFrame); // cap dt across tab-switches
   lastFrame = now;
-  // ease the smoothed mouse position toward the target — gives the
-  // parallax a soft "ribbon catches up" feel rather than snapping
-  mouseSmoothX += (mouseTargetX - mouseSmoothX) * 0.06;
-  mouseSmoothY += (mouseTargetY - mouseSmoothY) * 0.06;
   for (const b of blobs) b.update(dt);
   blobsCtx.fillStyle = '#f1e9d9';
   blobsCtx.fillRect(0, 0, W, H);
