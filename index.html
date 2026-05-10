@@ -383,6 +383,28 @@
   .cursor-leaf { opacity: 0; }
   body.cursor-ready .cursor-leaf { opacity: 1; }
 
+  /* gate page: small solid dot cursor (instead of the leaf) — sits ABOVE
+     the gate's z-index 99 so it's actually visible while the gate is up.
+     mix-blend-mode: difference inverts on cream / dark text / colored bg. */
+  .cursor-dot {
+    position: fixed;
+    top: 0; left: 0;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ffffff;
+    pointer-events: none;
+    z-index: 110;             /* above gate (99) and leaf cursor (90) */
+    transform: translate3d(-200px, -200px, 0);
+    mix-blend-mode: difference;
+    will-change: transform;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  /* visible only while the gate is still up + mouse has moved */
+  body.cursor-ready.gate-open .cursor-dot { opacity: 1; }
+  /* hide leaf while gate is open so we don't have two cursors */
+  body.gate-open .cursor-leaf { opacity: 0 !important; }
+
   /* ===== click ripple — two thin line-art circles, one solid one dashed =====
      mix-blend-mode: difference so strokes flip dark/light against any bg.
      Outer: solid, slower, larger. Inner: dashed, slightly delayed start
@@ -1000,7 +1022,8 @@
 
 
 <div class="corners">
-  <div class="tl">ONE POND</div>
+  <div class="tl">Raine Sha</div>
+  <div class="tr">Harvard GSD · MDes 27'</div>
 </div>
 
 <button class="reset" id="reset">清池 · Reset Pond</button>
@@ -1017,7 +1040,7 @@
       <path id="circlePath" d="M 60,60 m -45,0 a 45,45 0 1,1 90,0 a 45,45 0 1,1 -90,0" />
     </defs>
     <text fill="currentColor" font-family="Cormorant Garamond, serif" font-size="9" letter-spacing="3" text-transform="uppercase">
-      <textPath href="#circlePath" startOffset="0">SOUND&#160;ON&#160;·&#160;一池莲柳&#160;·&#160;LOTUS&#160;POND&#160;·&#160;</textPath>
+      <textPath href="#circlePath" startOffset="0">SOUND&#160;ON&#160;·&#160;LOTUS&#160;POND&#160;·&#160;SOUND&#160;ON&#160;·&#160;LOTUS&#160;POND&#160;·&#160;</textPath>
     </text>
   </svg>
   <span class="dot"></span>
@@ -1038,6 +1061,8 @@
 <div class="cursor-leaf" id="cursorLeaf" aria-hidden="true">
   <img src="./img/hover.png" alt="" />
 </div>
+<!-- small dot cursor used only on the gate page -->
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
 
 <script>
 /* =========================================================
@@ -1370,8 +1395,8 @@ toggle.addEventListener('click', () => {
   }
   const tp = toggle.querySelector('textPath');
   tp.textContent = muted
-    ? 'SOUND OFF · 一池莲柳 · LOTUS POND · '
-    : 'SOUND ON · 一池莲柳 · LOTUS POND · ';
+    ? 'SOUND OFF · LOTUS POND · SOUND OFF · LOTUS POND · '
+    : 'SOUND ON · LOTUS POND · SOUND ON · LOTUS POND · ';
 });
 
 document.getElementById('reset').addEventListener('click', (e) => {
@@ -1398,11 +1423,14 @@ document.getElementById('enterBtn').addEventListener('click', async () => {
    move so the leaf doesn't sit at 0,0 before the user touches the page. */
 (function setupCursor() {
   const leaf = document.getElementById('cursorLeaf');
-  if (!leaf) return;
+  const dot  = document.getElementById('cursorDot');
+  if (!leaf && !dot) return;
   let x = -200, y = -200;
   let raf = 0;
   function paint() {
-    leaf.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+    const t = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+    if (leaf) leaf.style.transform = t;
+    if (dot)  dot.style.transform  = t;
     raf = 0;
   }
   window.addEventListener('pointermove', (e) => {
@@ -1410,10 +1438,20 @@ document.getElementById('enterBtn').addEventListener('click', async () => {
     document.body.classList.add('cursor-ready');
     if (!raf) raf = requestAnimationFrame(paint);
   }, { passive: true });
-  // hide cursor when mouse leaves the window
   window.addEventListener('pointerleave', () => {
     document.body.classList.remove('cursor-ready');
   });
+
+  // toggle .gate-open on body so the right cursor shows on each page
+  const gateEl = document.getElementById('gate');
+  function syncGateClass() {
+    const isOpen = gateEl && !gateEl.classList.contains('gone');
+    document.body.classList.toggle('gate-open', isOpen);
+  }
+  syncGateClass();
+  // observe gate's class changes (it gets `.gone` after the begin button)
+  if (gateEl) new MutationObserver(syncGateClass)
+    .observe(gateEl, { attributes: true, attributeFilter: ['class'] });
 })();
 
 /* -------- deeper pages (progression + study) toggle in-study --------
