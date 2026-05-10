@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>一池莲柳 · Lotus Willow Wind</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Noto+Serif+SC:wght@200;300;400;500&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
@@ -256,23 +257,40 @@
   }
   .sound-toggle.muted .dot { width: 14px; height: 2px; border-radius: 1px; }
 
-  /* reset link bottom left */
-  .reset {
+  /* swipe-right gesture hint: wind brush-stroke + bilingual label */
+  .clear-hint {
     position: fixed;
     left: 4vw;
     bottom: 4.5vh;
     z-index: 12;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 12px;
-    letter-spacing: 0.34em;
-    text-transform: uppercase;
-    cursor: pointer;
-    background: none;
-    border: 0;
-    padding: 4px;
-    pointer-events: auto;
+    width: 130px;
+    pointer-events: none;
+    color: #ffffff;
+    mix-blend-mode: difference;
+    opacity: 0.7;
+    text-align: left;
+    animation: windHintBreath 4s ease-in-out infinite;
   }
-  .reset:hover { opacity: 0.6; }
+  .clear-wind { width: 78px; height: auto; display: block; margin-bottom: 8px; }
+  .clear-en {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .clear-cn {
+    display: block;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+  }
+  @keyframes windHintBreath {
+    0%, 100% { opacity: 0.55; transform: translateX(0); }
+    50%      { opacity: 0.9; transform: translateX(4px); }
+  }
 
   /* gentle hint pill — full-width centered so letter-spacing doesn't
      pull the visual center off (the trailing space after the last letter
@@ -901,14 +919,14 @@
   /* when user scrolls down to the study page,
      fade out all the fixed first-page UI cleanly */
   canvas#blobs, .grain, .grain-top, .corners, .sound-toggle,
-  .reset, .hint, .audio-status {
+  .clear-hint, .hint, .audio-status {
     transition: opacity 0.8s ease;
   }
   body.in-study canvas#blobs,
   body.in-study .grain,
   body.in-study .grain-top,
   body.in-study .corners,
-  body.in-study .reset,
+  body.in-study .clear-hint,
   body.in-study .hint,
   body.in-study .audio-status {
     opacity: 0;
@@ -916,6 +934,94 @@
   }
   /* sound toggle stays available on every page — its mix-blend-mode
      handles the cream → black background flip automatically */
+
+  /* ===== mobile / touch optimizations ===== */
+  /* on touch devices: kill the custom cursor entirely */
+  @media (hover: none), (pointer: coarse) {
+    .cursor-leaf, .cursor-dot { display: none !important; }
+  }
+
+  /* phone-sized viewport: re-pack the bottom UI so reset / hint /
+     hover words / sound toggle aren't dog-piled in the same corner */
+  @media (max-width: 768px) {
+    /* the "tap anywhere" hint is redundant on touch devices */
+    .hint { display: none; }
+
+    /* shrink the SOUND ON ring */
+    .sound-toggle {
+      width: 70px; height: 70px;
+      right: 2vw; bottom: 2vh;
+    }
+
+    /* reset: smaller + tighter to corner */
+    .reset {
+      font-size: 9.5px;
+      bottom: 2.5vh;
+      left: 3vw;
+      letter-spacing: 0.25em;
+    }
+
+    /* hover words: lift well above the bottom UI, tighter gap */
+    nav.words {
+      gap: clamp(14px, 3.5vw, 28px);
+      padding-bottom: 13vh;
+    }
+    nav.words a {
+      font-size: clamp(15px, 4vw, 22px);
+      letter-spacing: 0.2em;
+      padding: 0.3em 0.15em;
+    }
+    nav.words a::after { font-size: 9px; letter-spacing: 0.25em; }
+
+    /* hero title: looser line height + give the subtitle breathing room */
+    .hero h1 { letter-spacing: 0; }
+    .hero .sub {
+      line-height: 1.7;
+      font-size: clamp(10px, 2.5vw, 13px);
+      letter-spacing: 0.28em;
+      padding: 0 4vw;
+    }
+
+    /* main grid padding */
+    main { padding: 4vh 4vw; }
+
+    /* corners: shrink + keep top-right within viewport on narrow screens */
+    .corners {
+      font-size: 10px;
+      letter-spacing: 0.28em;
+    }
+    .corners .tl, .corners .tr { top: 2.5vh; }
+    .corners .tl { left: 3vw; }
+    .corners .tr {
+      right: 3vw;
+      max-width: 45vw;
+      line-height: 1.5;
+      text-align: right;
+    }
+
+    /* gallery: shrink the prev/next buttons to be reachable with thumbs */
+    .gallery-nav { width: 44px; height: 44px; font-size: 22px; }
+
+    /* gallery note + foot: smaller on mobile so they don't steal the cards' space */
+    .gallery-note { max-width: 80vw; font-size: 10.5px; }
+    .gallery-foot { font-size: 9.5px; letter-spacing: 0.32em; }
+
+    /* progression hint text */
+    .progression-hint { font-size: 10px; letter-spacing: 0.3em; }
+    .progression-counter { font-size: 10px; }
+
+    /* click ripples: scale down so they don't overflow on small screens */
+    @keyframes rippleExpand {
+      0%   { width: 0; height: 0; opacity: 0.85; border-width: 1.5px; }
+      60%  { opacity: 0.55;                       border-width: 1px; }
+      100% { width: 160px; height: 160px; opacity: 0; border-width: 0.5px; }
+    }
+    @keyframes rippleExpandInner {
+      0%   { width: 0; height: 0; opacity: 0.75; }
+      65%  { opacity: 0.45; }
+      100% { width: 120px; height: 120px; opacity: 0; }
+    }
+  }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
@@ -944,14 +1050,6 @@
     </div>
   </section>
 
-  <nav class="words">
-    <a data-en="listen">听</a>
-    <a data-en="stillness">静</a>
-    <a data-en="ripple">涟</a>
-    <a data-en="willow">柳</a>
-    <a data-en="lotus">莲</a>
-    <a data-en="wind">风</a>
-  </nav>
 </main>
 
 <!-- second page: 6-stage scroll-driven lotus lifecycle -->
@@ -999,6 +1097,7 @@
     <figure class="gallery-card tall"><img src="./img/g11.jpg" alt="" /></figure>
     <figure class="gallery-card"><img src="./img/g12.webp" alt="" /></figure>
     <figure class="gallery-card short"><img src="./img/g14.webp" alt="" /></figure>
+    <figure class="gallery-card tall"><img src="./img/g17.png" alt="" /></figure>
   </div>
   <button class="gallery-nav next" id="galleryNext" aria-label="next image">›</button>
   <div class="gallery-foot">drag · click ‹ › · vertical scroll moves to next page</div>
@@ -1026,7 +1125,17 @@
   <div class="tr">Harvard GSD · MDes 27'</div>
 </div>
 
-<button class="reset" id="reset">清池 · Reset Pond</button>
+<div class="clear-hint" id="clearHint" aria-label="two-finger swipe right to clear">
+  <svg class="clear-wind" viewBox="0 0 288 132" xmlns="http://www.w3.org/2000/svg"
+       role="img" aria-label="wind brush mark" shape-rendering="geometricPrecision">
+    <g fill="currentColor" fill-rule="evenodd">
+      <path d="M 111 35 L 111 38 L 114 39 L 127 39 L 152 48 L 166 56 L 168 59 L 170 59 L 185 70 L 189 70 L 194 73 L 222 73 L 229 70 L 234 70 L 238 67 L 254 61 L 255 59 L 268 52 L 267 50 L 242 50 L 231 47 L 223 47 L 217 44 L 203 41 L 181 30 L 177 30 L 171 27 L 162 27 L 158 25 L 133 27 L 127 30 L 113 33 Z"/>
+      <path d="M 15 48 L 16 50 L 30 49 L 50 53 L 69 65 L 105 95 L 121 104 L 144 112 L 181 112 L 206 104 L 227 92 L 226 90 L 189 92 L 163 87 L 141 78 L 90 45 L 64 36 L 46 36 L 34 39 Z"/>
+    </g>
+  </svg>
+  <span class="clear-en">swipe to clear →</span>
+  <span class="clear-cn">风过清池</span>
+</div>
 
 <div class="hint">tap anywhere</div>
 <div class="audio-status" id="audioStatus"></div>
@@ -1040,7 +1149,7 @@
       <path id="circlePath" d="M 60,60 m -45,0 a 45,45 0 1,1 90,0 a 45,45 0 1,1 -90,0" />
     </defs>
     <text fill="currentColor" font-family="Cormorant Garamond, serif" font-size="9" letter-spacing="3" text-transform="uppercase">
-      <textPath href="#circlePath" startOffset="0">SOUND&#160;ON&#160;·&#160;LOTUS&#160;POND&#160;·&#160;SOUND&#160;ON&#160;·&#160;LOTUS&#160;POND&#160;·&#160;</textPath>
+      <textPath href="#circlePath" startOffset="0">SOUND&#160;ON&#160;&#160;·&#160;&#160;LOTUS&#160;POND&#160;&#160;·&#160;&#160;</textPath>
     </text>
   </svg>
   <span class="dot"></span>
@@ -1138,15 +1247,17 @@ class Blob {
     this.baseRadius = rand(260, 580);
     this.alpha = rand(0.55, 0.82);
     this.angle = rand(0, Math.PI * 2);
-    // very slow rotation: full revolution every 28–90 seconds
     this.angularVel = (Math.random() < 0.5 ? -1 : 1) * rand(0.00007, 0.00022);
-    // each blob has 5–7 petals; their breathing phases are randomized so
-    // the flower feels alive rather than mechanically symmetric.
     this.petalCount = Math.floor(rand(5, 8));
     this.petalPhases = Array.from({ length: this.petalCount },
       () => rand(0, Math.PI * 2));
     this.bornAt = performance.now();
     this.bloomDuration = rand(1100, 1700);
+    // per-blob wind variation — different speeds + slight vertical drift
+    // make the "blow-away" feel like real wind catching each petal differently
+    this.windSpeed  = 0.85 + Math.random() * 0.5;     // 0.85–1.35×
+    this.windDrift  = (Math.random() - 0.5) * 80;      // ±40 px vertical
+    this.windRotate = (Math.random() - 0.5) * 0.0025;  // gentle spin during flight
   }
 
   update(dt) { this.angle += this.angularVel * dt; }
@@ -1156,13 +1267,26 @@ class Blob {
     const bloom = 1 - Math.pow(1 - t, 3); // easeOutCubic
     if (bloom <= 0) return;
     const r = this.baseRadius * bloom;
-    const a = this.alpha * bloom;
+    let a = this.alpha * bloom;
+    let dx = 0, dy = 0, extraSpin = 0;
+
+    // wind blow-away pass: shift right + drift + fade out + extra spin
+    if (windActive) {
+      const wt = Math.min(1, (now - windStart) / WIND_DURATION);
+      const ease = Math.pow(wt, 1.6);                  // accelerating sweep
+      dx = ease * window.innerWidth * 1.6 * this.windSpeed;
+      dy = Math.sin(wt * Math.PI) * this.windDrift;     // slight up-then-down arc
+      extraSpin = wt * this.windRotate * 600;
+      a *= Math.max(0, 1 - wt * wt);                    // fade out (squared)
+      if (a <= 0.005) return;
+    }
+
     const [cr, cg, cb] = this.color;
     const N = this.petalCount;
 
     ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.angle);
+    ctx.translate(this.x + dx, this.y + dy);
+    ctx.rotate(this.angle + extraSpin);
 
     // petals: N narrow soft-gradient ellipses radiating outward.
     // each one breathes (small sinusoidal pulse on its own phase) so the
@@ -1208,6 +1332,21 @@ class Blob {
 function spawnBlob(x, y) {
   blobs.push(new Blob(x, y));
   if (blobs.length > MAX_BLOBS) blobs.shift();
+}
+
+/* wind-blow state — when active, every blob rendered with rightward
+   sweep + fade. After the duration, the array is cleared. */
+const WIND_DURATION = 1800;
+let windActive = false;
+let windStart = 0;
+function triggerWind() {
+  if (!blobs.length || windActive) return;
+  windActive = true;
+  windStart = performance.now();
+  setTimeout(() => {
+    blobs.length = 0;
+    windActive = false;
+  }, WIND_DURATION + 80);
 }
 
 /* grain is rendered as a CSS layer above (img/noise.png with slow drift) */
@@ -1334,7 +1473,11 @@ function playWaterDrop() {
 
 function playRandomSound() { playWaterDrop(); }
 
-/* -------- click handling -------- */
+/* -------- click handling: tap vs swipe-right gesture --------
+   pointerdown records the start; pointerup decides:
+     • tiny movement (< 12 px) and short hold      → tap (spawn blob)
+     • > 140 px right with small vertical drift    → swipe-right (wind clear)
+   Other gestures (vertical scroll, large drift) are ignored. */
 function spawnRipple(x, y) {
   // outer solid ring (slower, larger)
   const outer = document.createElement('div');
@@ -1353,24 +1496,109 @@ function spawnRipple(x, y) {
   inner.addEventListener('animationend', () => inner.remove(), { once: true });
 }
 
-function onTap(e) {
-  const x = e.clientX ?? (e.touches?.[0]?.clientX);
-  const y = e.clientY ?? (e.touches?.[0]?.clientY);
+function onTapAt(x, y) {
   if (x == null || y == null) return;
   spawnBlob(x, y);
   spawnRipple(x, y);
   playRandomSound();
 }
 
+/* MOUSE / PEN: single-pointer down = potential tap or drag-swipe.
+   TOUCH single-finger: only used for tap (no clear gesture, prevents accidents).
+   TOUCH two-finger: detected separately below — that's the clear gesture.
+   TRACKPAD horizontal wheel (also a 2-finger gesture on Mac) → clear too. */
+let pStart = null;
 window.addEventListener('pointerdown', (e) => {
   if (gate && !gate.classList.contains('gone')) return;
-  // on deeper pages, clicks shouldn't spawn blobs (they have their own meaning)
   if (document.body.classList.contains('in-study')) return;
-  // ignore clicks on the toggle / reset / corner links / progression / study
   const t = e.target;
-  if (t.closest('.sound-toggle, .reset, .corners a, .progression, .study, .gallery, .process')) return;
-  onTap(e);
+  if (t.closest('.sound-toggle, .corners a, .progression, .study, .gallery, .process, nav.words a')) return;
+  pStart = { x: e.clientX, y: e.clientY, t: Date.now(), type: e.pointerType };
 });
+
+window.addEventListener('pointerup', (e) => {
+  if (!pStart) return;
+  const dx = e.clientX - pStart.x;
+  const dy = e.clientY - pStart.y;
+  const dur = Date.now() - pStart.t;
+  const sx = pStart.x, sy = pStart.y;
+  const type = pStart.type;
+  pStart = null;
+  // single-pointer drag right → wind clear.
+  // Works for mouse drag (desktop), single-finger swipe (mobile/iPad),
+  // and stylus drag. Trackpad 2-finger scroll is handled by the wheel
+  // listener below as a separate path.
+  if (dx > 110 && Math.abs(dy) < 100 && dur < 700) {
+    triggerWind();
+    return;
+  }
+  // small movement → tap
+  if (Math.abs(dx) < 12 && Math.abs(dy) < 12 && dur < 500) {
+    onTapAt(sx, sy);
+  }
+});
+window.addEventListener('pointercancel', () => { pStart = null; });
+
+/* Two-finger touch swipe right (mobile / iPad) — the "clear" gesture */
+let twoTouch = null;
+window.addEventListener('touchstart', (e) => {
+  if (gate && !gate.classList.contains('gone')) return;
+  if (document.body.classList.contains('in-study')) return;
+  if (e.touches.length === 2) {
+    twoTouch = {
+      x1: e.touches[0].clientX, y1: e.touches[0].clientY,
+      x2: e.touches[1].clientX, y2: e.touches[1].clientY,
+      lx1: e.touches[0].clientX, ly1: e.touches[0].clientY,
+      lx2: e.touches[1].clientX, ly2: e.touches[1].clientY,
+      t: Date.now(),
+    };
+  } else {
+    twoTouch = null;
+  }
+}, { passive: true });
+window.addEventListener('touchmove', (e) => {
+  if (!twoTouch || e.touches.length !== 2) return;
+  twoTouch.lx1 = e.touches[0].clientX; twoTouch.ly1 = e.touches[0].clientY;
+  twoTouch.lx2 = e.touches[1].clientX; twoTouch.ly2 = e.touches[1].clientY;
+}, { passive: true });
+window.addEventListener('touchend', () => {
+  if (!twoTouch) return;
+  const dx1 = twoTouch.lx1 - twoTouch.x1;
+  const dx2 = twoTouch.lx2 - twoTouch.x2;
+  const dy1 = twoTouch.ly1 - twoTouch.y1;
+  const dy2 = twoTouch.ly2 - twoTouch.y2;
+  const dur = Date.now() - twoTouch.t;
+  twoTouch = null;
+  // both fingers moved >80 px right with low vertical drift, within 800 ms
+  if (dx1 > 80 && dx2 > 80 && Math.abs(dy1) < 120 && Math.abs(dy2) < 120 && dur < 800) {
+    triggerWind();
+  }
+}, { passive: true });
+
+/* Trackpad two-finger horizontal scroll → triggers the wind clear.
+   We accumulate |deltaX| over a short window so any decisive 2-finger
+   horizontal swipe (left or right) clears the pond. This sidesteps the
+   "natural scrolling" sign confusion: users with natural scrolling on
+   get negative deltaX when fingers move right; users without it get
+   positive deltaX for the same finger motion — both work here. */
+let wheelXAcc = 0;
+let wheelXTimer = 0;
+window.addEventListener('wheel', (e) => {
+  if (gate && !gate.classList.contains('gone')) return;
+  if (document.body.classList.contains('in-study')) return;
+  // only count clearly-horizontal trackpad gestures
+  if (Math.abs(e.deltaX) < 4 || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+  // reset accumulator if direction reverses (so a back-and-forth jiggle
+  // doesn't slowly accumulate into a clear)
+  if (wheelXAcc !== 0 && Math.sign(e.deltaX) !== Math.sign(wheelXAcc)) wheelXAcc = 0;
+  wheelXAcc += e.deltaX;
+  clearTimeout(wheelXTimer);
+  wheelXTimer = setTimeout(() => { wheelXAcc = 0; }, 300);
+  if (Math.abs(wheelXAcc) > 220) {
+    triggerWind();
+    wheelXAcc = 0;
+  }
+}, { passive: true });
 
 // hover words: tap the word's own center on click for nicer placement
 document.querySelectorAll('nav.words a').forEach(el => {
@@ -1395,14 +1623,11 @@ toggle.addEventListener('click', () => {
   }
   const tp = toggle.querySelector('textPath');
   tp.textContent = muted
-    ? 'SOUND OFF · LOTUS POND · SOUND OFF · LOTUS POND · '
-    : 'SOUND ON · LOTUS POND · SOUND ON · LOTUS POND · ';
+    ? 'SOUND OFF  ·  LOTUS POND  ·  '
+    : 'SOUND ON  ·  LOTUS POND  ·  ';
 });
 
-document.getElementById('reset').addEventListener('click', (e) => {
-  e.stopPropagation();
-  blobs.length = 0; // rAF loop will repaint ivory next frame
-});
+// (the old reset button is gone — wind clear is now triggered by swipe-right)
 
 /* -------- gate (audio gesture) -------- */
 const gate = document.getElementById('gate');

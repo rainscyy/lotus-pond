@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <g fill="#3d6b54">
+    <!-- center petal: narrow vertical leaf, stem at (16, 25) -->
+    <path d="M 16 25
+             C 13 21, 13 11, 16 8
+             C 19 11, 19 21, 16 25 Z"/>
+    <!-- left petal: larger leaf, rotated -50° around the shared base -->
+    <path d="M 16 25
+             C 10 21, 11 9, 16 5
+             C 21 9, 22 21, 16 25 Z"
+          transform="rotate(-50 16 25)"/>
+    <!-- right petal: mirror -->
+    <path d="M 16 25
+             C 10 21, 11 9, 16 5
+             C 21 9, 22 21, 16 25 Z"
+          transform="rotate(50 16 25)"/>
+  </g>
+</svg>
