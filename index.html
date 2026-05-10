@@ -14,6 +14,8 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* hide the native cursor everywhere — only the hover-leaf cursor shows */
+  *, *::before, *::after { cursor: none !important; }
 
   html {
     width: 100%;
@@ -470,20 +472,23 @@
     50%      { opacity: 1; }
   }
 
-  /* ===== progression page: click-to-advance through 6 stages =====
-     One viewport tall. Each click on the section cycles to the next
-     stage (1 → 2 → … → 6 → 1). Scroll passes straight through to
-     the next page — no scroll hijacking. */
+  /* ===== progression page: sticky scroll-driven through 6 stages =====
+     Section is 400vh tall. Inner .progression-pinned is sticky 100vh.
+     Native scroll moves the page smoothly; the active stage is read
+     from scroll progress (no preventDefault, no wheel hijacking — keeps
+     trackpad inertia perfectly intact). Clicks programmatically scroll
+     to the next stage's position so click + scroll stay in sync. */
   .progression {
     position: relative;
     z-index: 20;
     width: 100vw;
-    height: 100vh;
+    height: 400vh;            /* ~50vh per stage = 1–2 swipes each */
     background: #000;
     cursor: pointer;
   }
   .progression-pinned {
-    position: relative;
+    position: sticky;
+    top: 0;
     width: 100%;
     height: 100vh;
     overflow: hidden;
@@ -1463,45 +1468,45 @@ if (galleryTrack) {
   });
 }
 
-/* -------- progression page: click + scroll, both advance stages --------
-   Click cycles 1 → 2 → … → 6 → 1.
-   Scroll wheel inside the section advances/retreats stages with a
-   700 ms cooldown so a single trackpad swipe = one stage. At boundaries
-   (stage 6 scrolling down, stage 1 scrolling up) the wheel passes
-   through to the page so users can leave the section naturally. */
+/* -------- progression page: sticky scroll-driven (smooth) + click-jump --------
+   Stage is derived purely from scroll progress through the 400vh section,
+   read on every native scroll event (passive, no preventDefault). This
+   keeps trackpad inertia and OS-level smoothness fully intact.
+   Click handler programmatically scrolls to the next stage's anchor
+   position so clicks and scrolls stay in sync. */
 if (progressionSection) {
   const stageEls = progressionSection.querySelectorAll('.progression-stage');
   const counter  = progressionSection.querySelector('.progression-counter');
-  let stage = 1;
+  let lastStage = 1;
 
-  function setStage(s) {
-    stage = Math.max(1, Math.min(6, s));
-    stageEls.forEach(el => el.classList.toggle('active', +el.dataset.stage === stage));
-    counter.textContent = `${stage} / 6`;
+  function applyStage(s) {
+    if (s === lastStage) return;
+    lastStage = s;
+    stageEls.forEach(el => el.classList.toggle('active', +el.dataset.stage === s));
+    counter.textContent = `${s} / 6`;
   }
 
-  // tap anywhere → next stage (loops)
-  progressionSection.addEventListener('click', () => {
-    setStage(stage >= 6 ? 1 : stage + 1);
-  });
+  function updateProgressionFromScroll() {
+    const total = progressionSection.offsetHeight - window.innerHeight;
+    if (total <= 0) return;
+    const top = progressionSection.getBoundingClientRect().top;
+    const progress = Math.max(0, Math.min(1, -top / total));
+    applyStage(Math.min(6, Math.floor(progress * 6) + 1));
+  }
+  window.addEventListener('scroll', updateProgressionFromScroll, { passive: true });
+  window.addEventListener('resize', updateProgressionFromScroll);
+  updateProgressionFromScroll();
 
-  // scroll wheel → advance/retreat with cooldown, clamps at 1 and 6
-  let lastWheel = 0;
-  const WHEEL_COOLDOWN = 700;
-  progressionSection.addEventListener('wheel', (e) => {
-    const goingDown = e.deltaY > 0;
-    const goingUp   = e.deltaY < 0;
-    // at boundary, let the page scroll past the progression section
-    if (goingDown && stage >= 6) return;
-    if (goingUp   && stage <= 1) return;
-    // inside, intercept and throttle
-    e.preventDefault();
-    const now = Date.now();
-    if (now - lastWheel < WHEEL_COOLDOWN) return;
-    lastWheel = now;
-    if (goingDown) setStage(stage + 1);
-    else if (goingUp) setStage(stage - 1);
-  }, { passive: false });
+  // click → smooth-scroll to the position of the next stage (loops back to 1)
+  progressionSection.addEventListener('click', () => {
+    const total = progressionSection.offsetHeight - window.innerHeight;
+    const sectionTop = progressionSection.offsetTop;
+    const next = lastStage >= 6 ? 1 : lastStage + 1;
+    // aim slightly into the next bucket so the stage flips reliably
+    const targetProgress = (next - 0.5) / 6;
+    const targetScroll = sectionTop + targetProgress * total;
+    window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  });
 }
 
 /* per-frame loop: rotate every blob's angle, repaint everything.

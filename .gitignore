@@ -1,0 +1,18 @@
+# macOS metadata
+.DS_Store
+
+# debug / temp files
+_inspect/
+
+# orphan duplicate / legacy audio
+audio/bgm(1).mp3
+audio/bg01.mp3
+audio/bg02.mp3
+
+# leftover macOS "Untitled" folder containing the old clone — duplicate
+未命名/
+
+# editor / OS junk
+Thumbs.db
+*.swp
+.vscode/
