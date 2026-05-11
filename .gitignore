@@ -16,3 +16,8 @@ audio/bg02.mp3
 Thumbs.db
 *.swp
 .vscode/
+
+# original full-size video sources (use _100mb.mp4 for deploy)
+ShaChunyu_Assignment#4_Lotus&Willow.mp4
+ShaChunyu_Assignment#4_Lotus&Willow_1.mp4
+ShaChunyu_Assignment#4_Lotus&Willow_2.mp4
